@@ -27,12 +27,14 @@
     "Logic Analyzer"
   ],
   "engines": {
-    "vscode": "^1.96.0"
+    "vscode": "^1.104.0"
   },
   "main": "./dist/extension",
   "browser": "./dist/extension",
   "activationEvents": [],
-  "extensionKind": ["workspace"],
+  "extensionKind": [
+    "workspace"
+  ],
   "contributes": {
     "resourceLabelFormatters": [
       {
@@ -995,6 +997,229 @@
         "command": "vaporview.openRemoteViewer",
         "title": "Open Remote Viewer"
       }
+    ],
+    "languageModelTools": [
+      {
+        "name": "vaporview_open_file",
+        "toolReferenceName": "openWaveformFile",
+        "displayName": "Open Waveform File in VaporView",
+        "modelDescription": "Opens a waveform dump file in VaporView using vaporview.openFile(object). Requires uri. Optional: loadAll (boolean) to load all variables, maxSignals (number, max 64) to limit loading if exceeding variable count. Returns confirmation.",
+        "userDescription": "Open a waveform dump file in the viewer.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(file)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Document URI of the waveform dump file to open (required)."
+            },
+            "loadAll": {
+              "type": "boolean",
+              "description": "If true, loads all variables into the viewport.",
+              "default": false
+            },
+            "maxSignals": {
+              "type": "number",
+              "description": "Abort loading all variables if netlist contains more than this number (limited to 64).",
+              "default": 64
+            }
+          },
+          "required": [
+            "uri"
+          ]
+        }
+      },
+      {
+        "name": "vaporview_add_variable",
+        "toolReferenceName": "addVariable",
+        "displayName": "Add Variable to Waveform",
+        "modelDescription": "Adds a specified variable (signal) to the active VaporView waveform viewer using waveformViewer.addVariable(object). Specify the variable with at least one of: netlistId, instancePath, or (scopePath AND name). uri is optional for the document. msb/lsb optional for bit range. Returns confirmation of addition.",
+        "userDescription": "Add a signal to the waveform viewer.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(pulse)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Optional Document URI - if not defined, uses the currently active or last active document."
+            },
+            "netlistId": {
+              "type": "string",
+              "description": "Optional Waveform Dump File Variable ID (highest priority specifier)."
+            },
+            "instancePath": {
+              "type": "string",
+              "description": "Optional Full instance path for variable."
+            },
+            "scopePath": {
+              "type": "string",
+              "description": "Optional Variable module path without variable name."
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional Variable name (required if using scopePath)."
+            },
+            "msb": {
+              "type": "number",
+              "description": "Optional Most Significant Bit."
+            },
+            "lsb": {
+              "type": "number",
+              "description": "Optional Least Significant Bit."
+            }
+          },
+          "required": []
+        }
+      },
+      {
+        "name": "vaporview_remove_variable",
+        "toolReferenceName": "removeVariable",
+        "displayName": "Remove Variable from Waveform",
+        "modelDescription": "Removes a specified variable (signal) from the active VaporView waveform viewer using waveformViewer.removeVariable(object). Specify the variable with at least one of: netlistId, instancePath, or (scopePath AND name). uri is optional for the document. msb/lsb optional for bit range. Returns confirmation of removal.",
+        "userDescription": "Remove a signal from the waveform viewer.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(close)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Optional Document URI - if not defined, uses the currently active or last active document."
+            },
+            "netlistId": {
+              "type": "string",
+              "description": "Optional Waveform Dump File Variable ID (highest priority specifier)."
+            },
+            "instancePath": {
+              "type": "string",
+              "description": "Optional Full instance path for variable."
+            },
+            "scopePath": {
+              "type": "string",
+              "description": "Optional Variable module path without variable name."
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional Variable name (required if using scopePath)."
+            },
+            "msb": {
+              "type": "number",
+              "description": "Optional Most Significant Bit."
+            },
+            "lsb": {
+              "type": "number",
+              "description": "Optional Least Significant Bit."
+            }
+          },
+          "required": []
+        }
+      },
+      {
+        "name": "vaporview_place_marker",
+        "toolReferenceName": "placeMarker",
+        "displayName": "Place Marker in Waveform",
+        "modelDescription": "Places a marker at a specific time in the active VaporView waveform viewer using waveformViewer.setMarker(time: number, markerType?: number, uri?: string, units?: string). Returns confirmation with the placed time.",
+        "userDescription": "Place a marker at a timestamp in the waveform.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(bookmark)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "number",
+              "description": "The timestamp (in simulation time units) where the marker should be placed.",
+              "default": 0
+            },
+            "markerType": {
+              "type": "number",
+              "description": "The type of marker to place. Only 0 or 1 is accepted: 0 for 'normal' and 1 for 'alt'.",
+              "default": 0
+            },
+            "uri": {
+              "type": "string",
+              "description": "Optional URI for the specific viewer or resource.",
+              "default": ""
+            },
+            "units": {
+              "type": "string",
+              "description": "Optional time units (e.g., 'ns', 'ps').",
+              "default": ""
+            }
+          },
+          "required": [
+            "time"
+          ]
+        }
+      },
+      {
+        "name": "vaporview_reveal_item",
+        "toolReferenceName": "revealItem",
+        "displayName": "Reveal Item in Netlist",
+        "modelDescription": "Reveals and selects a specified item (scope or variable) in the VaporView netlist view using waveformViewer.revealVariableInNetlistView(object). Specify the item with at least one of: netlistId, instancePath, or (scopePath AND name). uri is optional for the document. Returns confirmation.",
+        "userDescription": "Reveal an item in the waveform netlist.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(search)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Optional Document URI - if not defined, uses the currently active or last active document."
+            },
+            "netlistId": {
+              "type": "string",
+              "description": "Optional Waveform Dump File Variable ID (highest priority specifier)."
+            },
+            "instancePath": {
+              "type": "string",
+              "description": "Optional Full instance path for variable or scope."
+            },
+            "scopePath": {
+              "type": "string",
+              "description": "Optional Variable module path without target variable or scope name."
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional Variable or Scope name (required if using scopePath)."
+            }
+          },
+          "required": []
+        }
+      },
+      {
+        "name": "vaporview_get_values_at_time",
+        "toolReferenceName": "getValuesAtTime",
+        "displayName": "Get Values at Time",
+        "modelDescription": "Retrieves values for specified instance paths at a given time (or marker time) in the active VaporView waveform viewer using waveformViewer.getValuesAtTime(object). Returns an array of {instancePath: string, value: array (length 1 or 2)} for found paths.",
+        "userDescription": "Get signal values at a specific time.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(symbol-value)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Optional Document URI - if not defined, uses the currently active or last active document."
+            },
+            "time": {
+              "type": "number",
+              "description": "Optional timestamp; if not defined, uses marker time for the document."
+            },
+            "instancePaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of instance path strings for which to retrieve values (required)."
+            }
+          },
+          "required": [
+            "instancePaths"
+          ]
+        }
+      }
     ]
   },
   "dependencies": {
@@ -1005,7 +1230,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.14.6",
-    "@types/vscode": "1.89.0",
+    "@types/vscode": "1.104.0",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
     "@typescript-eslint/parser": "^7.6.0",
     "concurrently": "^9.1.0",

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 import { TimestampLinkProvider, NetlistLinkProvider } from './terminal_links';
 import { WaveformViewerProvider } from './viewer_provider';
+import { OpenFileTool, AddVariableTool, RemoveVariableTool, PlaceMarkerTool, RevealItemTool, GetValuesAtTimeTool } from './lm_tools';
 import * as path from 'path';
 
 // #region activate()
@@ -31,8 +32,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // I want to get semantic tokens for the current theme
   // The API is not available yet, so I'm just going to log the theme
-  vscode.window.onDidChangeActiveColorTheme((e) => {viewerProvider.updateColorTheme(e);});
-  vscode.workspace.onDidChangeConfiguration((e) => {viewerProvider.updateConfiguration(e);});
+  vscode.window.onDidChangeActiveColorTheme((e) => { viewerProvider.updateColorTheme(e); });
+  vscode.workspace.onDidChangeConfiguration((e) => { viewerProvider.updateConfiguration(e); });
 
   const markerSetEvent = WaveformViewerProvider.markerSetEventEmitter.event;
   const signalSelectEvent = WaveformViewerProvider.signalSelectEventEmitter.event;
@@ -43,9 +44,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // #region External Commands
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.openFile', async (e) => {
     viewerProvider.log.appendLine("Command called: 'vaporview.openFile ' + " + e.uri.toString());
-    if (!e.uri) {return;}
+    if (!e.uri) { return; }
     await vscode.commands.executeCommand('vscode.openWith', e.uri, 'vaporview.waveformViewer');
-    if (e.loadAll) {viewerProvider.loadAllVariablesFromFile(e.uri, e.maxSignals);}
+    if (e.loadAll) { viewerProvider.loadAllVariablesFromFile(e.uri.toString(), e.maxSignals); }
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('waveformViewer.addVariable', (e) => {
@@ -81,14 +82,14 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('waveformViewer.getViewerState', (e) => {
     viewerProvider.log.appendLine("Command called: 'waveformViewer.getViewerState' " + JSON.stringify(e));
     const document = viewerProvider.getDocumentFromOptionalUri(e.uri);
-    if (!document) {return;}
+    if (!document) { return; }
     return document.getSettings();
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('waveformViewer.getValuesAtTime', (e) => {
     viewerProvider.log.appendLine("Command called: 'waveformViewer.getValuesAtTime' " + JSON.stringify(e));
     const document = viewerProvider.getDocumentFromOptionalUri(e.uri);
-    if (!document) {return;}
+    if (!document) { return; }
     return document.getValuesAtTime(e);
   }));
 
@@ -148,7 +149,7 @@ export async function activate(context: vscode.ExtensionContext) {
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.removeAllInScope', (e) => {
-    if (e.collapsibleState === vscode.TreeItemCollapsibleState.None) {return;}
+    if (e.collapsibleState === vscode.TreeItemCollapsibleState.None) { return; }
     viewerProvider.removeSignalList(e.children);
   }));
 
@@ -164,9 +165,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.copyName', (e) => {
     let result = "";
-    if (e.scopePath !== "") {result += e.scopePath + ".";}
-    if (e.name) {result += e.name;}
-    if (e.signalName) {result += e.signalName;}
+    if (e.scopePath !== "") { result += e.scopePath + "."; }
+    if (e.name) { result += e.name; }
+    if (e.signalName) { result += e.signalName; }
     vscode.env.clipboard.writeText(result);
   }));
 
@@ -247,132 +248,132 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // #region Value Format
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsBinary', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {valueFormat: "binary"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "binary" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsHexadecimal', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {valueFormat: "hexadecimal"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "hexadecimal" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsDecimal', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {valueFormat: "decimal"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "decimal" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsDecimalSigned', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {valueFormat: "signed"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "signed" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsOctal', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {valueFormat: "octal"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "octal" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsFloat', (e) => {
     switch (e.width) {
-      case 8:  viewerProvider.setValueFormat(e.netlistId, {valueFormat: "float8"}); break;
-      case 16: viewerProvider.setValueFormat(e.netlistId, {valueFormat: "float16"}); break;
-      case 32: viewerProvider.setValueFormat(e.netlistId, {valueFormat: "float32"}); break;
-      case 64: viewerProvider.setValueFormat(e.netlistId, {valueFormat: "float64"}); break;
-      default: viewerProvider.setValueFormat(e.netlistId, {valueFormat: "binary"}); break;
+      case 8: viewerProvider.setValueFormat(e.netlistId, { valueFormat: "float8" }); break;
+      case 16: viewerProvider.setValueFormat(e.netlistId, { valueFormat: "float16" }); break;
+      case 32: viewerProvider.setValueFormat(e.netlistId, { valueFormat: "float32" }); break;
+      case 64: viewerProvider.setValueFormat(e.netlistId, { valueFormat: "float64" }); break;
+      default: viewerProvider.setValueFormat(e.netlistId, { valueFormat: "binary" }); break;
     }
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.renderMultiBit', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {renderType: "multiBit"});
+    viewerProvider.setValueFormat(e.netlistId, { renderType: "multiBit" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.renderLinear', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {renderType: "linear"});
+    viewerProvider.setValueFormat(e.netlistId, { renderType: "linear" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.renderStepped', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {renderType: "stepped"});
+    viewerProvider.setValueFormat(e.netlistId, { renderType: "stepped" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.renderLinearSigned', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {renderType: "linearSigned"});
+    viewerProvider.setValueFormat(e.netlistId, { renderType: "linearSigned" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.renderSteppedSigned', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {renderType: "steppedSigned"});
+    viewerProvider.setValueFormat(e.netlistId, { renderType: "steppedSigned" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsBFloat', (e) => {
-    viewerProvider.setValueFormat(e.netlistId,  {valueFormat: "bfloat16"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "bfloat16" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsTFloat', (e) => {
-    viewerProvider.setValueFormat(e.netlistId,  {valueFormat: "tensorfloat32"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "tensorfloat32" });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.displayAsAscii', (e) => {
-    viewerProvider.setValueFormat(e.netlistId,  {valueFormat: "ascii"});
+    viewerProvider.setValueFormat(e.netlistId, { valueFormat: "ascii" });
   }));
 
   // #region Annotate Edges
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.annotatePosedge', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {annotateValue: ["1"]});
+    viewerProvider.setValueFormat(e.netlistId, { annotateValue: ["1"] });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.annotateNegedge', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {annotateValue: ["0"]});
+    viewerProvider.setValueFormat(e.netlistId, { annotateValue: ["0"] });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.annotateAllEdge', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {annotateValue: ["0", "1"]});
+    viewerProvider.setValueFormat(e.netlistId, { annotateValue: ["0", "1"] });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.annotateNone', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {annotateValue: []});
+    viewerProvider.setValueFormat(e.netlistId, { annotateValue: [] });
   }));
 
   // #region Custom Color
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.defaultColor1', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 0});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 0 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.defaultColor2', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 1});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 1 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.defaultColor3', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 2});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 2 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.defaultColor4', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 3});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 3 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.customColor1', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 4});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 4 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.customColor2', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 5});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 5 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.customColor3', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 6});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 6 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.customColor4', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {colorIndex: 7});
+    viewerProvider.setValueFormat(e.netlistId, { colorIndex: 7 });
   }));
 
   // #region Row Height
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.rowHeight1x', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {rowHeight: 1});
+    viewerProvider.setValueFormat(e.netlistId, { rowHeight: 1 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.rowHeight2x', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {rowHeight: 2});
+    viewerProvider.setValueFormat(e.netlistId, { rowHeight: 2 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.rowHeight4x', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {rowHeight: 4});
+    viewerProvider.setValueFormat(e.netlistId, { rowHeight: 4 });
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('vaporview.rowHeight8x', (e) => {
-    viewerProvider.setValueFormat(e.netlistId, {rowHeight: 8});
+    viewerProvider.setValueFormat(e.netlistId, { rowHeight: 8 });
   }));
 
   // #region Vertical Scale
@@ -409,19 +410,29 @@ export async function activate(context: vscode.ExtensionContext) {
       prompt: 'Enter the Surfer server URL',
       value: ''
     });
-    
+
     if (!serverUrl) {
       return;
     }
-    
+
     const bearerToken = await vscode.window.showInputBox({
       prompt: 'Enter bearer token (optional)',
       password: true,
       value: ''
     });
-    
+
     viewerProvider.openRemoteViewer(serverUrl, bearerToken);
   }));
+
+  // Register LM tools for exported APIs
+  context.subscriptions.push(
+    vscode.lm.registerTool('vaporview_open_file', new OpenFileTool()),
+    vscode.lm.registerTool('vaporview_add_variable', new AddVariableTool()),
+    vscode.lm.registerTool('vaporview_remove_variable', new RemoveVariableTool()),
+    vscode.lm.registerTool('vaporview_place_marker', new PlaceMarkerTool()),
+    vscode.lm.registerTool('vaporview_reveal_item', new RevealItemTool()),
+    vscode.lm.registerTool('vaporview_get_values_at_time', new GetValuesAtTimeTool())
+  );
 
   return {
     onDidSetMarker: markerSetEvent,
@@ -434,7 +445,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export default WaveformViewerProvider;
 
-export function deactivate() {}
+export function deactivate() { }
 
 export function getTokenColorsForTheme(themeName: string) {
   const tokenColors = new Map();

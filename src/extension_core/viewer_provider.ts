@@ -992,7 +992,7 @@ export class WaveformViewerProvider implements vscode.CustomReadonlyEditorProvid
       if (element.netlistId === netlistId) {isDisplayed = true;}
     });
 
-    if (isDisplayed !== undefined) {
+    if (isDisplayed) {
       document.revealSignalInWebview(netlistId);
     } else {
       this.addSignalsToDocument(document, [metadata], [], undefined);
