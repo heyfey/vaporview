@@ -319,6 +319,14 @@ export class WaveformViewerProvider implements vscode.CustomReadonlyEditorProvid
     else {return this.getDocumentFromUri(uri);}
   }
 
+  public getActiveDocument(): VaporviewDocument | undefined {
+    return this.activeDocument;
+  }
+
+  public getLastActiveDocument(): VaporviewDocument | undefined {
+    return this.lastActiveDocument;
+  }
+
   public getAllDocuments() {
     const result: any = {
       documents: [],
